@@ -1,6 +1,6 @@
 {
   "name": "biborne-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "main.js",
   "scripts": {
     "start": "node scripts/copy-vendor.js && electron .",
@@ -17,7 +17,13 @@
   "build": {
     "appId": "fr.biborne.messagerie",
     "productName": "Biborne Messagerie",
-    "files": ["main.js", "preload.js", "renderer/**/*", "build/**/*", "!node_modules/electron-builder/**/*"],
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "build/**/*",
+      "!node_modules/electron-builder/**/*"
+    ],
     "publish": {
       "provider": "github",
       "owner": "AdamChela",
@@ -25,11 +31,16 @@
     },
     "win": {
       "icon": "build/icon.ico",
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "mac": {
       "icon": "build/icon.png",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.business"
     }
   }
