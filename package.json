@@ -17,7 +17,7 @@
   "build": {
     "appId": "fr.biborne.messagerie",
     "productName": "Biborne Messagerie",
-    "files": ["main.js", "renderer/**/*", "build/**/*", "!node_modules/electron-builder/**/*"],
+    "files": ["main.js", "preload.js", "renderer/**/*", "build/**/*", "!node_modules/electron-builder/**/*"],
     "publish": {
       "provider": "github",
       "owner": "AdamChela",

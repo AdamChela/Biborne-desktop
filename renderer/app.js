@@ -1321,5 +1321,44 @@ function formatTime(iso) { return new Date(iso).toLocaleTimeString("fr-FR", { ho
 function formatDuration(s) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
 function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
 
+// ===== Mise à jour automatique =====
+// Affiche une bannière en haut de l'écran (visible même avant connexion) qui suit les événements
+// envoyés par le processus principal (main.js -> electron-updater) via le pont exposé dans preload.js.
+// N'existe que dans l'app packagée : window.updater est présent en dev aussi (preload toujours chargé),
+// mais aucun événement ne sera émis puisque le check n'est lancé que si app.isPackaged (voir main.js).
+function initAutoUpdateUI() {
+  if (!window.updater) return; // sécurité si jamais lancé hors Electron (ne devrait pas arriver)
+
+  const banner = $("update-banner");
+  const text = $("update-banner-text");
+  const fill = $("update-progress-fill");
+  const restartBtn = $("update-restart-btn");
+
+  window.updater.getVersion().then(v => {
+    const el = document.getElementById("about-version");
+    if (el) el.textContent = `Version ${v}`;
+  }).catch(() => {});
+
+  const show = (msg) => { text.textContent = msg; banner.classList.remove("hidden"); };
+  const hideSoon = (delay = 4000) => setTimeout(() => banner.classList.add("hidden"), delay);
+
+  window.updater.onChecking(() => { fill.style.width = "0%"; show("Vérification des mises à jour…"); hideSoon(3000); });
+  window.updater.onAvailable((info) => show(`Nouvelle version ${info.version} disponible, téléchargement…`));
+  window.updater.onNotAvailable(() => {}); // rien à afficher, déjà à jour
+  window.updater.onProgress(({ percent }) => {
+    show(`Téléchargement de la mise à jour… ${percent}%`);
+    fill.style.width = percent + "%";
+  });
+  window.updater.onDownloaded((info) => {
+    fill.style.width = "100%";
+    show(`Version ${info.version} prête à être installée.`);
+    restartBtn.hidden = false;
+  });
+  window.updater.onError((message) => { console.error("[AutoUpdate]", message); banner.classList.add("hidden"); });
+
+  restartBtn.addEventListener("click", () => window.updater.restart());
+}
+initAutoUpdateUI();
+
 // ===== Auto-démarrage =====
 if (state.token && state.employee) startApp();

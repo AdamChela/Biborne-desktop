@@ -956,3 +956,25 @@ body.light .shortcuts-list kbd { background:#F5F2EE; border-color:#D9D4CE; color
 body.light .toggle-slider { background:#D9D4CE; border-color:#C5BFB8; }
 body.light .qr-item { background:#F5F2EE; }
 body.light .quick-reply-add input { background:#F5F2EE; border-color:#D9D4CE; color:#1A1410; }
+
+/* ===== Bannière de mise à jour ===== */
+.update-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+  background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+  padding: 8px 16px; transition: transform .25s ease, opacity .25s ease;
+}
+.update-banner.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+.update-banner-row { display: flex; align-items: center; gap: 8px; }
+.update-icon { color: var(--orange); flex-shrink: 0; }
+#update-banner-text { font-size: 12.5px; color: var(--text-secondary); flex: 1; }
+.update-restart-btn {
+  background: var(--orange); color: #fff; border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 600; padding: 6px 12px; cursor: pointer;
+}
+.update-restart-btn:hover { background: var(--orange-dim); }
+.update-progress-track {
+  height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden;
+}
+.update-progress-fill {
+  height: 100%; width: 0%; background: var(--orange); border-radius: 2px; transition: width .2s ease;
+}
