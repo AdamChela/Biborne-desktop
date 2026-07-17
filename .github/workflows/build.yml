@@ -1,0 +1,35 @@
+name: Build Biborne Messagerie (Mac + Windows)
+
+# Se déclenche à chaque push sur main, ou manuellement depuis l'onglet "Actions" de GitHub.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: npm run dist
+
+      # Récupère les installateurs produits (.dmg/.zip sur Mac, .exe sur Windows)
+      # et les rend téléchargeables depuis l'onglet "Actions" > le run > "Artifacts".
+      - uses: actions/upload-artifact@v4
+        with:
+          name: biborne-desktop-${{ matrix.os }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.exe
+          if-no-files-found: warn

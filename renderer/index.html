@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>Biborne Messagerie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ECRAN DE CONNEXION -->
+<div id="login-view" class="login-view">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-mark">B</div>
+      <div class="brand-word">Biborne<span>Messagerie</span></div>
+    </div>
+    <form id="login-form">
+      <label class="field">
+        <span>Email</span>
+        <input type="email" id="login-email" placeholder="toi@biborne.fr" autocomplete="username"/>
+      </label>
+      <label class="field">
+        <span>Mot de passe</span>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </label>
+      <p id="login-error" class="error-text" hidden></p>
+      <button type="submit" class="btn-primary">Se connecter</button>
+    </form>
+    <p class="login-hint">Pas encore de compte ? Demande à un administrateur de t'en créer un.</p>
+  </div>
+</div>
+
+<!-- INTERFACE PRINCIPALE -->
+<div id="app-view" class="app-view" hidden>
+
+  <!-- BARRE LATERALE GAUCHE -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="employee-avatar" id="employee-avatar">A</div>
+      <div class="sidebar-employee">
+        <div id="employee-name" class="employee-name">—</div>
+        <div class="employee-status-row">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="employee-status-label" class="employee-role">En ligne</span>
+        </div>
+      </div>
+      <div class="sidebar-icons">
+        <button class="icon-btn" id="settings-btn" title="Paramètres">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="icon-btn" id="logout-btn" title="Se déconnecter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Recherche -->
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Rechercher une conversation…"/>
+    </div>
+
+    <!-- Filtres avec couleurs -->
+    <div class="sidebar-filters">
+      <button class="filter-chip active" data-filter="all">Toutes</button>
+      <button class="filter-chip filter-open" data-filter="not_done">● Pas fait</button>
+      <button class="filter-chip filter-closed" data-filter="done">● Fait</button>
+    </div>
+
+    <!-- Stats rapides : cliquables, filtrent la liste (comptent les conversations par statut de ticket) -->
+    <div class="sidebar-stats">
+      <div class="stat-item" id="stat-item-open" title="Voir les conversations à traiter">
+        <span id="stat-open" class="stat-num open">0</span>
+        <span class="stat-label">Ouvertes</span>
+      </div>
+      <div class="stat-item" id="stat-item-pending" title="Voir les conversations en attente">
+        <span id="stat-pending" class="stat-num pending">0</span>
+        <span class="stat-label">En attente</span>
+      </div>
+      <div class="stat-item" id="stat-item-closed" title="Voir les conversations clôturées">
+        <span id="stat-closed" class="stat-num closed">0</span>
+        <span class="stat-label">Clôturées</span>
+      </div>
+    </div>
+
+    <div id="conversation-list" class="conversation-list">
+      <div class="empty-state">Chargement…</div>
+    </div>
+  </aside>
+
+  <!-- PANEL PRINCIPAL -->
+  <main class="chat-panel">
+    <div id="chat-empty" class="chat-empty">
+      <div class="chat-empty-mark">B</div>
+      <p>Sélectionne une conversation<br>pour commencer à discuter.</p>
+    </div>
+
+    <div id="chat-active" class="chat-active" hidden>
+      <header class="chat-header">
+        <div class="chat-header-left" id="chat-header-left" title="Voir les personnes de la conversation" style="cursor:pointer">
+          <div class="chat-avatar" id="chat-avatar">?</div>
+          <div class="chat-header-info">
+            <div id="chat-client-name" class="chat-client-name">—</div>
+            <div id="chat-client-meta" class="chat-client-meta">—</div>
+          </div>
+        </div>
+
+        <div class="ticket-bar">
+          <label class="ticket-option todo">
+            <input type="radio" name="ticket" value="todo"/>
+            <span><span class="ticket-dot" style="background:#E74C3C"></span>À faire</span>
+          </label>
+          <label class="ticket-option progress">
+            <input type="radio" name="ticket" value="in_progress"/>
+            <span><span class="ticket-dot" style="background:#F1C40F"></span>En cours</span>
+          </label>
+          <label class="ticket-option done">
+            <input type="radio" name="ticket" value="done"/>
+            <span><span class="ticket-dot" style="background:#2ECC71"></span>Fait</span>
+          </label>
+          <div id="ticket-display" class="ticket-display ticket-todo"><span class="ticket-dot" style="background:#E74C3C"></span>À faire</div>
+        </div>
+
+        <div class="chat-header-actions">
+          <span id="chat-status-badge" class="status-badge status-open">—</span>
+          <button id="notes-btn" class="icon-btn" title="Note interne">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          </button>
+          <button id="call-btn" class="icon-btn call-btn" title="Appeler le client (audio)" data-client-id="">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 10.9 19.79 19.79 0 0 1 1 2.18 2 2 0 0 1 3 0h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 14.92z"/></svg>
+          </button>
+          <button id="video-call-btn" class="icon-btn call-btn" title="Appeler le client (visio)" data-client-id="">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </button>
+          <button id="rename-conv-btn" class="icon-btn" title="Renommer le groupe">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button id="approve-client-btn" class="icon-btn" title="Approuver ce client" style="display:none;background:#2ecc71;color:#fff;width:auto;padding:0 12px;font-size:13px;font-weight:600">Approuver</button>
+          <button id="delete-conv-btn" class="icon-btn icon-btn-danger" title="Supprimer définitivement cette conversation" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="messages" class="messages"></div>
+      <div id="typing-indicator" class="typing-indicator" hidden>
+        <span></span><span></span><span></span> en train d'écrire…
+      </div>
+
+      <!-- Réponses rapides -->
+      <div id="quick-replies" class="quick-replies" hidden></div>
+
+      <!-- Note interne partagée -->
+      <div id="notes-panel" class="notes-panel" hidden>
+        <div class="notes-panel-header">
+          <span>Note interne (partagée entre employés)</span>
+          <span id="notes-updated-by" class="notes-updated-by"></span>
+        </div>
+        <textarea id="notes-textarea" placeholder="Ajouter une note interne visible par toute l'équipe…"></textarea>
+      </div>
+
+      <div id="mention-dropdown" class="mention-dropdown hidden"></div>
+      <div id="media-preview-bar" class="media-preview-bar" hidden></div>
+      <div id="rec-bar" class="rec-bar" hidden>
+        <span class="rec-dot"></span>
+        <span class="rec-bar-text">Enregistrement… <span id="rec-timer">0:00</span></span>
+        <button type="button" id="rec-cancel-btn" class="rec-btn rec-cancel" title="Annuler">✕</button>
+        <button type="button" id="rec-send-btn" class="rec-btn rec-send" title="Envoyer">✓</button>
+      </div>
+      <form id="composer" class="composer">
+        <input type="file" id="file-input" hidden/>
+        <button type="button" id="attach-btn" class="icon-btn" title="Joindre un fichier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <button type="button" id="quick-reply-btn" class="icon-btn" title="Réponses rapides">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </button>
+        <button type="button" id="mic-btn" class="icon-btn" title="Message vocal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <input type="text" id="message-input" placeholder="Écrire un message…" autocomplete="off"/>
+        <button type="submit" class="icon-btn send-btn" title="Envoyer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<!-- OVERLAY APPEL -->
+<div id="call-overlay" class="call-overlay" hidden>
+  <video id="call-remote-video" class="call-remote-video" autoplay playsinline hidden></video>
+  <video id="call-local-video" class="call-local-video" autoplay playsinline muted hidden></video>
+  <div class="call-card">
+    <div class="call-avatar" id="call-avatar">?</div>
+    <div id="call-client-name" class="call-client-name">Client</div>
+    <div class="call-icon-anim"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 10.9 19.79 19.79 0 0 1 1 2.18 2 2 0 0 1 3 0h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 14.92z"/></svg></div>
+    <div id="call-status-text" class="call-status-text">Appel en cours…</div>
+    <div id="call-timer" class="call-timer">00:00</div>
+  </div>
+  <div class="call-controls-row">
+    <button id="call-toggle-mic" class="btn-call-toggle" title="Couper le micro">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+    </button>
+    <button id="call-toggle-cam" class="btn-call-toggle" title="Couper la caméra" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    </button>
+    <button id="call-hangup" class="btn-hangup">Raccrocher</button>
+  </div>
+  <audio id="call-audio" autoplay></audio>
+</div>
+
+<!-- PANNEAU PARTICIPANTS -->
+<div id="participants-overlay" class="settings-overlay hidden"></div>
+<div id="participants-panel" class="settings-panel hidden">
+  <div class="settings-header">
+    <button class="settings-close" id="participants-close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h2 class="settings-title">Personnes dans la conversation</h2>
+  </div>
+  <div class="settings-body" id="participants-body"></div>
+</div>
+
+<!-- PANNEAU PARAMETRES -->
+<div id="settings-overlay" class="settings-overlay hidden"></div>
+<div id="settings-panel" class="settings-panel hidden">
+  <div class="settings-header">
+    <button class="settings-close" id="settings-close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h2 class="settings-title">Paramètres</h2>
+  </div>
+
+  <div class="settings-body">
+    <!-- Profil -->
+    <div class="settings-section">
+      <div class="settings-profile">
+        <div class="settings-avatar" id="settings-avatar">A</div>
+        <div>
+          <div id="settings-name" class="settings-name">—</div>
+          <div id="settings-email" class="settings-email">—</div>
+          <span id="settings-role-badge" class="role-badge">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statut de présence -->
+    <div class="settings-section">
+      <div class="settings-section-title">Mon statut</div>
+      <div class="presence-grid">
+        <button class="presence-btn active" data-presence="online">
+          <span class="pdot online"></span> En ligne
+        </button>
+        <button class="presence-btn" data-presence="away">
+          <span class="pdot away"></span> Absent
+        </button>
+        <button class="presence-btn" data-presence="busy">
+          <span class="pdot busy"></span> Occupé
+        </button>
+        <button class="presence-btn" data-presence="invisible">
+          <span class="pdot invisible"></span> Invisible
+        </button>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="settings-section">
+      <div class="settings-section-title">Notifications</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Son des messages</div>
+          <div class="settings-row-desc">Jouer un son à chaque nouveau message</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="notif-sound" checked/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Notifications bureau</div>
+          <div class="settings-row-desc">Afficher des notifications Windows</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="notif-desktop" checked/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Aperçu du message</div>
+          <div class="settings-row-desc">Afficher le contenu dans la notification</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="notif-preview" checked/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Réponses rapides -->
+    <div class="settings-section">
+      <div class="settings-section-title">Réponses rapides</div>
+      <div class="settings-row-desc" style="margin-bottom:10px">Raccourcis messages prédéfinis accessibles depuis le bouton ⚡ dans le chat.</div>
+      <div id="quick-replies-list" class="quick-replies-list"></div>
+      <div class="quick-reply-add">
+        <input type="text" id="qr-input" placeholder="Ajouter une réponse rapide…"/>
+        <button id="qr-add-btn" class="btn-secondary">Ajouter</button>
+      </div>
+    </div>
+
+    <!-- Affichage -->
+    <div class="settings-section">
+      <div class="settings-section-title">Affichage</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Taille du texte</div>
+        </div>
+        <div class="font-size-ctrl">
+          <button id="font-dec" class="font-btn">A−</button>
+          <span id="font-size-label">Moyen</span>
+          <button id="font-inc" class="font-btn">A+</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Thème sombre</div>
+          <div class="settings-row-desc">Interface orange et noire</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="theme-toggle" checked/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Afficher les heures</div>
+          <div class="settings-row-desc">Horodatage sur chaque message</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="show-time" checked/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Confidentialité -->
+    <div class="settings-section">
+      <div class="settings-section-title">Confidentialité & Sécurité</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Confirmation avant clôture</div>
+          <div class="settings-row-desc">Demander confirmation avant de clôturer</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="confirm-close" checked/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Accusé de lecture</div>
+          <div class="settings-row-desc">Envoyer les confirmations de lecture</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="read-receipts" checked/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Raccourcis clavier -->
+    <div class="settings-section">
+      <div class="settings-section-title">Raccourcis clavier</div>
+      <div class="shortcuts-list">
+        <div class="shortcut-row"><kbd>Entrée</kbd><span>Envoyer un message</span></div>
+        <div class="shortcut-row"><kbd>Shift+Entrée</kbd><span>Nouvelle ligne</span></div>
+        <div class="shortcut-row"><kbd>Ctrl+Shift+I</kbd><span>Outils développeur</span></div>
+        <div class="shortcut-row"><kbd>Ctrl+F</kbd><span>Rechercher</span></div>
+        <div class="shortcut-row"><kbd>Échap</kbd><span>Fermer panneau</span></div>
+      </div>
+    </div>
+
+    <!-- À propos -->
+    <div class="settings-section">
+      <div class="settings-section-title">À propos</div>
+      <div class="about-card">
+        <div class="about-logo">B</div>
+        <div class="about-info">
+          <div class="about-name">Biborne Messagerie</div>
+          <div class="about-version">Version 1.0.0</div>
+          <div class="about-desc">Plateforme de messagerie interne SAV Biborne — caisses, bornes, balances.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Déconnexion -->
+    <div class="settings-section">
+      <button id="settings-logout" class="btn-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        Se déconnecter
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/socket.io.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
