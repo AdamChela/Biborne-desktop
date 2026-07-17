@@ -27,7 +27,8 @@
     "publish": {
       "provider": "github",
       "owner": "AdamChela",
-      "repo": "biborne-desktop"
+      "repo": "biborne-desktop",
+      "releaseType": "release"
     },
     "win": {
       "icon": "build/icon.ico",

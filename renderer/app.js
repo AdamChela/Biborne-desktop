@@ -190,7 +190,7 @@ function connectSocket() {
   });
   state.socket.on("ticket_updated", ({ conversationId, ticketStatus, ticketOwner }) => {
     const c = state.conversations.find(c => c.id === conversationId);
-    if (c) { c.ticketStatus = ticketStatus; c.ticketOwner = ticketOwner; renderConversationList(); updateStats(); }
+    if (c) { c.ticketStatus = ticketStatus; c.ticketOwner = ticketOwner; renderConversationList(); }
     if (conversationId === state.currentConvId) updateTicketUI(ticketStatus, ticketOwner);
   });
   state.socket.on("call:answer", ({ sessionId, answer }) => {
@@ -230,6 +230,7 @@ function connectSocket() {
   });
   state.socket.on("message_edited", (payload) => applyMessageEdit(payload));
   state.socket.on("message_deleted", ({ id }) => applyMessageDelete(id));
+  state.socket.on("media_expired", ({ id }) => applyMediaExpired(id));
   state.socket.on("messages_read", ({ conversationId, readerType }) => {
     if (conversationId !== state.currentConvId) return;
     if (readerType === "client" || readerType === "guest") {
@@ -267,26 +268,10 @@ function showDesktopNotif(msg) {
 async function loadConversations() {
   try {
     state.conversations = await apiFetch("/api/conversations");
-    updateStats();
     renderConversationList();
   } catch (err) { console.error(err); }
 }
 
-// Compte les conversations par statut de TICKET (todo/in_progress/urgent/waiting/done) — c'est le
-// vrai workflow utilisé partout ailleurs dans l'app (labels, filtres). Avant, ce widget comptait
-// Conversation.status, un champ qui reste toujours à "open" par défaut et n'est jamais changé nulle
-// part : les stats affichaient donc systématiquement 1/0/0 (ou équivalent), sans rapport avec la réalité.
-function updateStats() {
-  const open    = state.conversations.filter(c => ["todo","in_progress","urgent"].includes(c.ticketStatus || "todo")).length;
-  const pending = state.conversations.filter(c => c.ticketStatus === "waiting").length;
-  const closed  = state.conversations.filter(c => c.ticketStatus === "done").length;
-  $("stat-open").textContent = open;
-  $("stat-pending").textContent = pending;
-  $("stat-closed").textContent = closed;
-}
-
-const STATUS_COLOR = { open: "status-open", pending: "status-pending", closed: "status-closed" };
-const STATUS_LABEL = { open: "Ouverte", pending: "En attente", closed: "Clôturée" };
 const TICKET = {
   todo:        { label: "À faire",   color: "#E74C3C", cls: "ticket-todo" },
   in_progress: { label: "En cours",  color: "#F1C40F", cls: "ticket-progress" },
@@ -301,8 +286,6 @@ function renderConversationList() {
     const ts = c.ticketStatus || "todo";
     if (state.filter === "not_done") return ts !== "done";
     if (state.filter === "done") return ts === "done";
-    if (state.filter === "stat_open") return ["todo","in_progress","urgent"].includes(ts);
-    if (state.filter === "stat_pending") return ts === "waiting";
     return true;
   }).filter(c => {
     if (!q) return true;
@@ -385,11 +368,11 @@ $("search-input").addEventListener("input", (e) => {
   }, 350);
 });
 
-// Filtres (chips "Toutes/Pas fait/Fait" et cartes de stats "Ouvertes/En attente/Clôturées" partagent
-// le même axe de filtrage — un clic sur l'un désactive l'autre).
+// Filtres (chips "Toutes/Pas fait/Fait") : le seul tri qui existe réellement dans le workflow —
+// pas de notion de conversation "clôturée", une conversation reste permanente tant qu'un employé
+// habilité ne la supprime pas explicitement (voir deleteConvBtn).
 function clearActiveFilterUI() {
   document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
-  document.querySelectorAll(".stat-item").forEach(c => c.classList.remove("active"));
 }
 document.querySelectorAll(".filter-chip").forEach(chip => {
   chip.addEventListener("click", () => {
@@ -399,17 +382,6 @@ document.querySelectorAll(".filter-chip").forEach(chip => {
     renderConversationList();
   });
 });
-function bindStatFilter(itemId, filterValue) {
-  $(itemId).addEventListener("click", () => {
-    clearActiveFilterUI();
-    $(itemId).classList.add("active");
-    state.filter = filterValue;
-    renderConversationList();
-  });
-}
-bindStatFilter("stat-item-open", "stat_open");
-bindStatFilter("stat-item-pending", "stat_pending");
-bindStatFilter("stat-item-closed", "done"); // réutilise le même filtre que la puce "Fait"
 
 // ===== Sélection conversation =====
 async function selectConversation(id) {
@@ -589,7 +561,11 @@ function appendMessage(msg) {
   const fileUrl = msg.fileUrl ? (msg.fileUrl.startsWith("http") ? msg.fileUrl : SERVER_URL + msg.fileUrl) : null;
   let content = "";
   const isImageFile = msg.type === "image" || (msg.mimeType && msg.mimeType.startsWith("image/"));
-  if (isImageFile) {
+  // Média supprimé automatiquement après 30 jours (voir backend utils/mediaCleanup.js) : le message
+  // reste dans l'historique (légende, date, expéditeur) mais le fichier n'est plus accessible.
+  if (msg.mediaExpired) {
+    content = EXPIRED_HTML;
+  } else if (isImageFile) {
     content = `<img src="${fileUrl}" style="max-width:240px;border-radius:8px;display:block;cursor:pointer" onclick="window.open('${fileUrl}','_blank')"/>`;
   } else switch(msg.type) {
     case "video": content = `<video src="${fileUrl}" controls style="max-width:240px;border-radius:8px;display:block"></video>`; break;
@@ -681,6 +657,18 @@ function applyMessageDelete(id) {
   row.querySelector(".msg-actions")?.remove();
   const bub = row.querySelector(".bubble");
   if (bub) bub.innerHTML = `<span class="msg-deleted">Message supprimé</span>`;
+}
+// Suppression automatique d'un média après 30 jours (voir backend utils/mediaCleanup.js) :
+// contrairement à applyMessageDelete, on garde le message en place (légende, date, expéditeur,
+// position chronologique) — on remplace juste l'élément média par l'indicateur "Média expiré".
+const EXPIRED_HTML = `<span class="msg-expired"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Média expiré</span>`;
+function applyMediaExpired(id) {
+  const msg = state.messagesById[id];
+  if (msg) { msg.mediaExpired = true; msg.fileUrl = null; }
+  const row = findBubbleRow(id);
+  if (!row) return;
+  const mediaEl = row.querySelector("img, video, .voice-row, .file-chip");
+  if (mediaEl) mediaEl.outerHTML = EXPIRED_HTML;
 }
 function updateCheckmark(id, status) {
   const msg = state.messagesById[id];
@@ -1094,7 +1082,6 @@ function removeConversationFromUI(convId) {
   state.conversations = state.conversations.filter(c => c.id !== convId);
   state.filtered = state.filtered.filter(c => c.id !== convId);
   renderConversationList();
-  updateStats();
   if (state.currentConvId === convId) {
     state.currentConvId = null;
     $("chat-active").hidden = true;
