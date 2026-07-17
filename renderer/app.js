@@ -273,9 +273,8 @@ async function loadConversations() {
 }
 
 const TICKET = {
-  todo:        { label: "À faire",   color: "#E74C3C", cls: "ticket-todo" },
-  in_progress: { label: "En cours",  color: "#F1C40F", cls: "ticket-progress" },
-  done:        { label: "Fait",      color: "#2ECC71", cls: "ticket-done" },
+  todo: { label: "À faire", color: "#E74C3C", cls: "ticket-todo" },
+  done: { label: "Fait",    color: "#2ECC71", cls: "ticket-done" },
 };
 // Petit point coloré (remplace les emoji 🔴🟡✅ dans les badges de statut)
 function ticketDot(color) { return `<span class="ticket-dot" style="background:${color}"></span>`; }
