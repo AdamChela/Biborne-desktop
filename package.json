@@ -7,7 +7,8 @@
     "dist": "node scripts/copy-vendor.js && electron-builder"
   },
   "dependencies": {
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "electron-updater": "^6.3.9"
   },
   "devDependencies": {
     "electron": "^43.1.0",
@@ -17,6 +18,11 @@
     "appId": "fr.biborne.messagerie",
     "productName": "Biborne Messagerie",
     "files": ["main.js", "renderer/**/*", "build/**/*", "!node_modules/electron-builder/**/*"],
+    "publish": {
+      "provider": "github",
+      "owner": "AdamChela",
+      "repo": "biborne-desktop"
+    },
     "win": {
       "icon": "build/icon.ico",
       "target": ["nsis"]

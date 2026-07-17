@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, dialog } = require("electron");
 const path = require("path");
+const { autoUpdater } = require("electron-updater");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -10,6 +11,27 @@ function createWindow() {
   });
   win.loadFile("renderer/index.html");
 }
-app.whenReady().then(createWindow);
+
+// Mise à jour automatique : au lancement, l'app vérifie sur GitHub Releases s'il existe
+// une version plus récente que celle installée. Si oui, elle la télécharge en arrière-plan
+// puis propose à l'utilisateur de redémarrer pour l'appliquer (aucune manip requise de sa part).
+function setupAutoUpdate() {
+  autoUpdater.autoDownload = true;
+  autoUpdater.on("update-downloaded", () => {
+    dialog.showMessageBox({
+      type: "info",
+      title: "Mise à jour disponible",
+      message: "Une nouvelle version de Biborne Messagerie a été téléchargée. Redémarrer maintenant pour l'appliquer ?",
+      buttons: ["Redémarrer", "Plus tard"],
+    }).then(({ response }) => { if (response === 0) autoUpdater.quitAndInstall(); });
+  });
+  autoUpdater.on("error", (err) => console.error("[AutoUpdate]", err.message));
+  autoUpdater.checkForUpdates().catch((err) => console.error("[AutoUpdate] check failed:", err.message));
+}
+
+app.whenReady().then(() => {
+  createWindow();
+  if (app.isPackaged) setupAutoUpdate(); // pas de check en dev (npm start), uniquement sur l'app installée
+});
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
 app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
