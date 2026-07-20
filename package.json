@@ -1,6 +1,6 @@
 {
   "name": "biborne-desktop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "main.js",
   "scripts": {
     "start": "node scripts/copy-vendor.js && electron .",
@@ -39,8 +39,18 @@
     "mac": {
       "icon": "build/icon.png",
       "target": [
-        { "target": "dmg", "arch": ["universal"] },
-        { "target": "zip", "arch": ["universal"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
       ],
       "category": "public.app-category.business",
       "hardenedRuntime": true,
