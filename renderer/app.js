@@ -989,6 +989,18 @@ function renderQuickReplies() {
 }
 
 // ===== Appels WebRTC (audio + visio) =====
+// Serveurs ICE : le STUN seul (stun.l.google.com) ne suffit pas à connecter deux appareils derrière
+// un NAT restrictif/pare-feu d'entreprise (cas fréquent au bureau) — la connexion "sonne" mais aucun
+// média ne passe et le chrono reste bloqué à 00:00. Le serveur TURN (Open Relay Project, gratuit) sert
+// de relais dans ce cas pour que l'appel passe quand même. Si ça recommence à bloquer plus tard, il
+// faudra un TURN dédié (le service gratuit est limité à 20 Go/mois, partagé entre tous ses utilisateurs).
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
+];
+
 // Passe l'appel en "connecté" + démarre le chrono, une seule fois (appelé dès la réception
 // de la réponse côté employé, ou dès que la connexion WebRTC est établie).
 function markCallConnected() {
@@ -1004,7 +1016,7 @@ async function startCallFlow(isVideo, target) {
   if (!t.id || state.activeCall) { if (t && !t.id) alert((t.type === "guest" ? "Invité" : "Client") + " introuvable (numéro/identifiant manquant)."); return; }
   try {
     const session = await apiFetch("/api/calls", { method: "POST", body: JSON.stringify({ targetType: t.type, targetId: t.id, type: isVideo ? "video" : "audio" }) });
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     state.activeCall = { sessionId: session.id, clientId: t.id, peerType: t.type, peerConnection: pc, isVideo, timerStarted: false };
     pc.onicecandidate = ({ candidate }) => { if (candidate) state.socket?.emit("call:ice", { targetType: t.type, targetId: t.id, sessionId: session.id, candidate }); };
     pc.ontrack = (e) => {
