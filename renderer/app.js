@@ -1334,10 +1334,22 @@ function initAutoUpdateUI() {
     fill.style.width = "100%";
     show(`Version ${info.version} prête à être installée.`);
     restartBtn.hidden = false;
+    showUpdateModal(info.version);
   });
   window.updater.onError((message) => { console.error("[AutoUpdate]", message); banner.classList.add("hidden"); });
 
   restartBtn.addEventListener("click", () => window.updater.restart());
+
+  // Popup impossible à manquer une fois la mise à jour téléchargée (contrairement à la bannière
+  // discrète en haut de l'écran) : s'affiche par-dessus tout, y compris l'écran de connexion.
+  const modalOverlay = $("update-modal-overlay");
+  const modalText = $("update-modal-text");
+  function showUpdateModal(version) {
+    modalText.textContent = `La version ${version} est prête à être installée. L'app va redémarrer.`;
+    modalOverlay.classList.remove("hidden");
+  }
+  $("update-modal-restart-btn").addEventListener("click", () => window.updater.restart());
+  $("update-modal-later-btn").addEventListener("click", () => modalOverlay.classList.add("hidden"));
 }
 initAutoUpdateUI();
 
