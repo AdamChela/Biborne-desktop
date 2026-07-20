@@ -402,11 +402,6 @@ async function selectConversation(id) {
   deleteConvBtn.hidden = !state.employee?.canDelete;
   updateApproveBtn(conv);
 
-  const badge = $("chat-status-badge");
-  const tkt = TICKET[conv.ticketStatus || "todo"];
-  badge.className = "status-badge";
-  badge.innerHTML = `${ticketDot(tkt.color)}${tkt.label}`;
-
   typingIndicator.hidden = true;
   updateTicketUI(conv.ticketStatus || "todo", conv.ticketOwner);
 

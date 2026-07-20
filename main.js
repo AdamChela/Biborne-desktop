@@ -1,6 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("path");
 const { autoUpdater } = require("electron-updater");
+
+// Retire la barre de menu native (File/Edit/View/Window) : c'est un résidu par défaut d'Electron,
+// sans utilité pour une app de messagerie destinée aux employés/clients (pas un outil de dev).
+Menu.setApplicationMenu(null);
 
 let mainWin = null;
 
@@ -14,6 +18,7 @@ function createWindow() {
     },
     icon: path.join(__dirname, "build/icon.png"),
     titleBarStyle: "default",
+    autoHideMenuBar: true,
   });
   mainWin.loadFile("renderer/index.html");
 }
